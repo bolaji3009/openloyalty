@@ -4,7 +4,7 @@ COPY backend /var/www/openloyalty/backend
 COPY frontend /var/www/openloyalty/frontend
 
 RUN echo 'server {\n\
-    listen 8080;\n\
+    listen 80;\n\
     server_name _;\n\
     root /var/www/openloyalty/backend/web;\n\
     index index.php;\n\
