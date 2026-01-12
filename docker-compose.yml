@@ -46,7 +46,7 @@ services:
     networks:
       - openloyalty
 
-  nginx:
+  web:
     build:
       context: .
       dockerfile: Dockerfile.nginx
@@ -57,10 +57,6 @@ services:
       - ./frontend:/var/www/openloyalty/frontend
     networks:
       - openloyalty
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.openloyalty-api.rule=Host(`${DOMAIN:-localhost}`)"
-      - "traefik.http.services.openloyalty-api.loadbalancer.server.port=8080"
 
 networks:
   openloyalty:
