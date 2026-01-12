@@ -13,20 +13,18 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Configurar GD
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+# Configurar extensiones
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-configure pgsql -with-pgsql=/usr/include/postgresql/
 
-# Configurar pgsql
-RUN docker-php-ext-configure pgsql -with-pgsql=/usr/include/postgresql/
-
-# Instalar extensiones PHP una por una
-RUN docker-php-ext-install pdo
-RUN docker-php-ext-install pgsql
-RUN docker-php-ext-install pdo_pgsql
-RUN docker-php-ext-install intl
-RUN docker-php-ext-install zip
-RUN docker-php-ext-install gd
-RUN docker-php-ext-install mbstring
+# Instalar extensiones PHP
+RUN docker-php-ext-install \
+    pdo \
+    pgsql \
+    pdo_pgsql \
+    intl \
+    zip \
+    gd
 
 # Instalar Composer
 COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
@@ -36,7 +34,7 @@ WORKDIR /var/www/openloyalty
 # Copiar código
 COPY . .
 
-# Instalar dependencias PHP (permisivo)
+# Instalar dependencias PHP
 RUN if [ -f backend/composer.json ]; then \
         cd backend && \
         composer install --no-scripts --ignore-platform-reqs --no-interaction || true; \
