@@ -3,41 +3,44 @@ FROM nginx:1.25-alpine
 COPY backend /var/www/openloyalty/backend
 COPY frontend /var/www/openloyalty/frontend
 
-# Configurar Nginx para Symfony (backend/web/)
-RUN echo 'server {\n\
-    listen 8080;\n\
-    server_name _;\n\
-    root /var/www/openloyalty/backend/web;\n\
-    \n\
-    location / {\n\
-        try_files $uri /app.php$is_args$args;\n\
-    }\n\
-    \n\
-    location ~ ^/app\.php(/|$) {\n\
-        fastcgi_pass php:9000;\n\
-        fastcgi_split_path_info ^(.+\.php)(/.*)$;\n\
-        include fastcgi_params;\n\
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;\n\
-        fastcgi_param DOCUMENT_ROOT $realpath_root;\n\
-        internal;\n\
-    }\n\
-    \n\
-    location ~ ^/app_dev\.php(/|$) {\n\
-        fastcgi_pass php:9000;\n\
-        fastcgi_split_path_info ^(.+\.php)(/.*)$;\n\
-        include fastcgi_params;\n\
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;\n\
-        fastcgi_param DOCUMENT_ROOT $realpath_root;\n\
-    }\n\
-    \n\
-    location ~ \.php$ {\n\
-        return 404;\n\
-    }\n\
-    \n\
-    error_log /var/log/nginx/error.log;\n\
-    access_log /var/log/nginx/access.log;\n\
-}' > /etc/nginx/conf.d/default.conf
+# Crear configuración de nginx correctamente
+RUN cat > /etc/nginx/conf.d/default.conf <<'NGINXCONF'
+server {
+    listen 8080;
+    server_name _;
+    root /var/www/openloyalty/backend/web;
+    
+    location / {
+        try_files $uri /app.php$is_args$args;
+    }
+    
+    location ~ ^/app\.php(/|$) {
+        fastcgi_pass php:9000;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        internal;
+    }
+    
+    location ~ ^/app_dev\.php(/|$) {
+        fastcgi_pass php:9000;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+    }
+    
+    location ~ \.php$ {
+        return 404;
+    }
+    
+    error_log /var/log/nginx/error.log;
+    access_log /var/log/nginx/access.log;
+}
+NGINXCONF
 
+# Eliminar configuración por defecto
 RUN rm -f /etc/nginx/conf.d/default.conf.default
 
 CMD ["nginx", "-g", "daemon off;"]
