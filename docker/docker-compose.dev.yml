@@ -1,33 +1,79 @@
-version: "2"
+version: "3.8"
 
 services:
   php:
     build:
       context: '../'
       dockerfile: './docker/dev/php/fpm-dockerfile'
-    links:
-      - db
-      - elk
-      - mail
+    container_name: open_loyalty_backend_dev
+    depends_on:
+      db:
+        condition: service_healthy
+      elk:
+        condition: service_healthy
+      mail:
+        condition: service_started
     ports:
       - "9000:9000"
     volumes:
         - '../backend:/var/www/openloyalty'
+
   nginx:
     build:
       context: '../'
       dockerfile: './docker/dev/web/backend-dockerfile'
-    links:
+    container_name: open_loyalty_nginx_dev
+    depends_on:
       - php
     ports:
-      - "80:80"
+      - "8181:80"
+
   frontend:
     container_name: open_loyalty_frontend_dev
     build:
       context: '../'
       dockerfile: './docker/dev/web/front-dockerfile'
     ports:
-      - "8081:8081"
+      - "8182:8081"
     volumes:
       - '../frontend/:/var/www/frontend'
       - './dev/web/config.js:/var/www/frontend/src/config.js'
+
+  db:
+    image: postgres:15-alpine
+    container_name: open_loyalty_db_dev
+    environment:
+      POSTGRES_DB: openloyalty
+      POSTGRES_USER: openloyalty
+      POSTGRES_PASSWORD: openloyalty
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U openloyalty" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elk:
+    image: elasticsearch:7.17.10
+    container_name: open_loyalty_elk_dev
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elk_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mail:
+    image: mailhog/mailhog:latest
+    container_name: open_loyalty_mail_dev
+    ports:
+      - "8186:8025"
+
+volumes:
+  postgres_data:
+  elk_data:
