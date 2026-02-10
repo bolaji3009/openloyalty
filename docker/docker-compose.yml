@@ -53,27 +53,33 @@ services:
       DATABASE_USER: ${POSTGRES_USER:-openloyalty}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-openloyalty}
       ELASTICSEARCH_HOST: elk
-      ELASTICSEARCH_PORT: 9200
       MAIL_HOST: mail
-      MAIL_PORT: 1025
     volumes:
-      - ./backend:/var/www/openloyalty/backend
+      - ../backend:/var/www/openloyalty/backend
 
-  nginx:
-    container_name: open_loyalty_frontend
+  web:
+    container_name: open_loyalty_nginx
     build:
       context: .
       dockerfile: Dockerfile.nginx
     depends_on:
       - php
-    ports:
-      - "80:80"
-      - "8182:3001"
-      - "8183:3002"
-      - "8184:3003"
     volumes:
-      - ./backend:/var/www/openloyalty/backend
-      - ./frontend:/var/www/openloyalty/frontend
+      - ../backend:/var/www/openloyalty/backend
+      - ../frontend:/var/www/openloyalty/frontend
+    ports:
+      - "8181:8080"
+
+  frontend:
+    container_name: open_loyalty_frontend
+    build:
+      context: .
+      dockerfile: docker/dev/web/front-dockerfile
+    ports:
+      - "8182:8081"
+    volumes:
+      - ../frontend:/var/www/frontend
+      - ./dev/web/config.js:/var/www/frontend/src/config.js
 
 volumes:
   postgres_data:
