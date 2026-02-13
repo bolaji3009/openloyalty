@@ -15,16 +15,18 @@ services:
       mail:
         condition: service_started
     environment:
-      DATABASE_HOST: db
-      DATABASE_PORT: 5432
-      DATABASE_NAME: openloyalty
-      DATABASE_USER: openloyalty
-      DATABASE_PASSWORD: openloyalty
-      ELASTICSEARCH_HOST: elk
-      MAIL_HOST: mail
+      SYMFONY__DATABASE_HOST: db
+      SYMFONY__DATABASE_PORT: 5432
+      SYMFONY__DATABASE_NAME: openloyalty
+      SYMFONY__DATABASE_USER: openloyalty
+      SYMFONY__DATABASE_PASSWORD: openloyalty
+      SYMFONY__ELASTICA_HOST: elk
+      SYMFONY__ELASTICA_PORT: 9200
+      SYMFONY__MAILER_HOST: mail
+      SYMFONY__MAILER_PORT: 1025
 
   db:
-    image: postgres:15-alpine
+    image: postgres:9.6-alpine
     container_name: open_loyalty_db_test
     environment:
       POSTGRES_DB: openloyalty
@@ -37,11 +39,10 @@ services:
       retries: 5
 
   elk:
-    image: elasticsearch:7.17.10
+    image: elasticsearch:2.4
     container_name: open_loyalty_elk_test
     environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ES_HEAP_SIZE=512m
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
       interval: 30s

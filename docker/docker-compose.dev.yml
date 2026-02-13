@@ -15,6 +15,16 @@ services:
         condition: service_started
     ports:
       - "9000:9000"
+    environment:
+      SYMFONY__DATABASE_HOST: db
+      SYMFONY__DATABASE_PORT: 5432
+      SYMFONY__DATABASE_NAME: openloyalty
+      SYMFONY__DATABASE_USER: openloyalty
+      SYMFONY__DATABASE_PASSWORD: openloyalty
+      SYMFONY__ELASTICA_HOST: elk
+      SYMFONY__ELASTICA_PORT: 9200
+      SYMFONY__MAILER_HOST: mail
+      SYMFONY__MAILER_PORT: 1025
     volumes:
         - '../backend:/var/www/openloyalty'
 
@@ -27,6 +37,8 @@ services:
       - php
     ports:
       - "8181:80"
+    volumes:
+      - '../backend:/var/www/openloyalty'
 
   frontend:
     container_name: open_loyalty_frontend_dev
@@ -40,7 +52,7 @@ services:
       - './dev/web/config.js:/var/www/frontend/src/config.js'
 
   db:
-    image: postgres:15-alpine
+    image: postgres:9.6-alpine
     container_name: open_loyalty_db_dev
     environment:
       POSTGRES_DB: openloyalty
@@ -55,11 +67,10 @@ services:
       retries: 5
 
   elk:
-    image: elasticsearch:7.17.10
+    image: elasticsearch:2.4
     container_name: open_loyalty_elk_dev
     environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ES_HEAP_SIZE=512m
     volumes:
       - elk_data:/usr/share/elasticsearch/data
     healthcheck:

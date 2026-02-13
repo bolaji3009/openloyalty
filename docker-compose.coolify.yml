@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:9.6-alpine
     container_name: open_loyalty_db
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-openloyalty}
@@ -17,11 +17,10 @@ services:
       retries: 5
 
   elk:
-    image: elasticsearch:7.17.10
+    image: elasticsearch:2.4
     container_name: open_loyalty_elk
     environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ES_HEAP_SIZE=512m
     volumes:
       - elk_data:/usr/share/elasticsearch/data
     healthcheck:
@@ -47,15 +46,15 @@ services:
       elk:
         condition: service_healthy
     environment:
-      DATABASE_HOST: db
-      DATABASE_PORT: 5432
-      DATABASE_NAME: ${POSTGRES_DB:-openloyalty}
-      DATABASE_USER: ${POSTGRES_USER:-openloyalty}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-openloyalty}
-      ELASTICSEARCH_HOST: elk
-      ELASTICSEARCH_PORT: 9200
-      MAIL_HOST: mail
-      MAIL_PORT: 1025
+      SYMFONY__DATABASE_HOST: db
+      SYMFONY__DATABASE_PORT: 5432
+      SYMFONY__DATABASE_NAME: ${POSTGRES_DB:-openloyalty}
+      SYMFONY__DATABASE_USER: ${POSTGRES_USER:-openloyalty}
+      SYMFONY__DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-openloyalty}
+      SYMFONY__ELASTICA_HOST: elk
+      SYMFONY__ELASTICA_PORT: 9200
+      SYMFONY__MAILER_HOST: mail
+      SYMFONY__MAILER_PORT: 1025
     volumes:
       - ./backend:/var/www/openloyalty/backend
 
@@ -67,10 +66,7 @@ services:
     depends_on:
       - php
     ports:
-      - "80:80"
-      - "8182:3001"
-      - "8183:3002"
-      - "8184:3003"
+      - "80:8080"
     volumes:
       - ./backend:/var/www/openloyalty/backend
       - ./frontend:/var/www/openloyalty/frontend
