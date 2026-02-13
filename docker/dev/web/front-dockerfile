@@ -1,13 +1,17 @@
-FROM divante/open-loyalty-base-nodejs AS front
+FROM node:6
 
-RUN usermod -u 1000 www-data
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    ruby-full \
+    build-essential \
+    && gem install sass \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN npm install -g yarn
+
 WORKDIR /var/www/frontend
 
-RUN cd $(npm root -g)/npm \
-    && npm install fs-extra \
-    && sed -i -e s/graceful-fs/fs-extra/ -e s/fs.rename/fs.move/ ./lib/utils/rename.js \
-    && npm install -g yarn
+EXPOSE 8081
 
-EXPOSE 3000
-WORKDIR /var/www/frontend
-CMD yarn install && npm start
+CMD ["sh", "-c", "yarn install && npm start"]

@@ -1,24 +1,45 @@
-FROM composer/composer:1.1-alpine AS composer
-FROM divante/open-loyalty-base-php-fpm AS base
+FROM php:7.1-fpm
 
-RUN pecl install xdebug
-RUN docker-php-ext-enable xdebug
-RUN usermod -u 1000 www-data
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libicu-dev \
+    libpq-dev \
+    libmcrypt-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    git \
+    unzip \
+    wget \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY ./docker/dev/php/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
-COPY --from=composer /usr/local/bin/composer /usr/local/bin/composer
+# Configure extensions
+RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+    && docker-php-ext-configure pgsql -with-pgsql=/usr/include/postgresql/
 
-ADD https://www.phing.info/get/phing-latest.phar /usr/local/bin/phing
-RUN chmod a+x /usr/local/bin/phing
+# Install PHP extensions
+RUN docker-php-ext-install \
+    pdo \
+    pgsql \
+    pdo_pgsql \
+    intl \
+    zip \
+    gd \
+    mcrypt \
+    bcmath
+
+# Install Xdebug (optional for dev, but let's keep it if possible)
+RUN pecl install xdebug-2.9.8 && docker-php-ext-enable xdebug
+
+# Install Composer
+COPY --from=composer:1.10 /usr/bin/composer /usr/bin/composer
+
+# Install Phing
+RUN wget https://www.phing.info/get/phing-latest.phar -O /usr/local/bin/phing && chmod +x /usr/local/bin/phing
 
 WORKDIR /var/www/openloyalty
 
-ONBUILD RUN chmod -R 777 /var/www/openloyalty/var
-ONBUILD RUN chmod 777 /var/www/openloyalty/var/cache
-ONBUILD RUN chmod 777 /var/www/openloyalty/var/logs
-ONBUILD RUN chown -R www-data:www-data /var/www/openloyalty/var
-
 ENV SYMFONY_ENV="dev"
 
-CMD composer install && bin/console assets:install && chown -R www-data:www-data /var/www/openloyalty/var && php-fpm
-
+CMD composer install && bin/console assets:install && php-fpm

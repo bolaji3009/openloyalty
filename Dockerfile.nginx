@@ -3,44 +3,39 @@ FROM nginx:1.25-alpine
 COPY backend /var/www/openloyalty/backend
 COPY frontend /var/www/openloyalty/frontend
 
-# Crear configuración de nginx correctamente
-RUN cat > /etc/nginx/conf.d/default.conf <<'NGINXCONF'
-server {
-    listen 8080;
-    server_name _;
-    root /var/www/openloyalty/backend/web;
-    
-    location / {
-        try_files $uri /app.php$is_args$args;
-    }
-    
-    location ~ ^/app\.php(/|$) {
-        fastcgi_pass php:9000;
-        fastcgi_split_path_info ^(.+\.php)(/.*)$;
-        include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-        fastcgi_param DOCUMENT_ROOT $realpath_root;
-        internal;
-    }
-    
-    location ~ ^/app_dev\.php(/|$) {
-        fastcgi_pass php:9000;
-        fastcgi_split_path_info ^(.+\.php)(/.*)$;
-        include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-        fastcgi_param DOCUMENT_ROOT $realpath_root;
-    }
-    
-    location ~ \.php$ {
-        return 404;
-    }
-    
-    error_log /var/log/nginx/error.log;
-    access_log /var/log/nginx/access.log;
-}
-NGINXCONF
-
-# Eliminar configuración por defecto
-RUN rm -f /etc/nginx/conf.d/default.conf.default
+# Create nginx configuration
+RUN echo 'server {' > /etc/nginx/conf.d/default.conf && \
+    echo '    listen 8080;' >> /etc/nginx/conf.d/default.conf && \
+    echo '    server_name _;' >> /etc/nginx/conf.d/default.conf && \
+    echo '    root /var/www/openloyalty/backend/web;' >> /etc/nginx/conf.d/default.conf && \
+    echo '    ' >> /etc/nginx/conf.d/default.conf && \
+    echo '    location / {' >> /etc/nginx/conf.d/default.conf && \
+    echo '        try_files $uri /app.php$is_args$args;' >> /etc/nginx/conf.d/default.conf && \
+    echo '    }' >> /etc/nginx/conf.d/default.conf && \
+    echo '    ' >> /etc/nginx/conf.d/default.conf && \
+    echo '    location ~ ^/app\.php(/|$) {' >> /etc/nginx/conf.d/default.conf && \
+    echo '        fastcgi_pass php:9000;' >> /etc/nginx/conf.d/default.conf && \
+    echo '        fastcgi_split_path_info ^(.+\.php)(/.*)$;' >> /etc/nginx/conf.d/default.conf && \
+    echo '        include fastcgi_params;' >> /etc/nginx/conf.d/default.conf && \
+    echo '        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;' >> /etc/nginx/conf.d/default.conf && \
+    echo '        fastcgi_param DOCUMENT_ROOT $realpath_root;' >> /etc/nginx/conf.d/default.conf && \
+    echo '        internal;' >> /etc/nginx/conf.d/default.conf && \
+    echo '    }' >> /etc/nginx/conf.d/default.conf && \
+    echo '    ' >> /etc/nginx/conf.d/default.conf && \
+    echo '    location ~ ^/app_dev\.php(/|$) {' >> /etc/nginx/conf.d/default.conf && \
+    echo '        fastcgi_pass php:9000;' >> /etc/nginx/conf.d/default.conf && \
+    echo '        fastcgi_split_path_info ^(.+\.php)(/.*)$;' >> /etc/nginx/conf.d/default.conf && \
+    echo '        include fastcgi_params;' >> /etc/nginx/conf.d/default.conf && \
+    echo '        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;' >> /etc/nginx/conf.d/default.conf && \
+    echo '        fastcgi_param DOCUMENT_ROOT $realpath_root;' >> /etc/nginx/conf.d/default.conf && \
+    echo '    }' >> /etc/nginx/conf.d/default.conf && \
+    echo '    ' >> /etc/nginx/conf.d/default.conf && \
+    echo '    location ~ \.php$ {' >> /etc/nginx/conf.d/default.conf && \
+    echo '        return 404;' >> /etc/nginx/conf.d/default.conf && \
+    echo '    }' >> /etc/nginx/conf.d/default.conf && \
+    echo '    ' >> /etc/nginx/conf.d/default.conf && \
+    echo '    error_log /var/log/nginx/error.log;' >> /etc/nginx/conf.d/default.conf && \
+    echo '    access_log /var/log/nginx/access.log;' >> /etc/nginx/conf.d/default.conf && \
+    echo '}' >> /etc/nginx/conf.d/default.conf
 
 CMD ["nginx", "-g", "daemon off;"]
